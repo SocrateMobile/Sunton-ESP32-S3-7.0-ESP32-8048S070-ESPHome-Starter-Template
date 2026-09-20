@@ -252,7 +252,7 @@ display:
       blue: [15, 7, 6, 5, 4]
     lambda: |-
       const auto COLOR_WHITE      = Color(255, 255, 255);
-      const auto COLOR_BLACK      = Color(0, 0, 0);
+      const auto COLOR_RED      = Color(255, 0, 0);
       const auto COLOR_BLUE       = Color(0, 120, 230);
       const auto COLOR_GREEN      = Color(40, 167, 69);
       const auto COLOR_DARK_GRAY  = Color(120, 120, 120);
@@ -265,7 +265,7 @@ display:
         bool time_ok = id(ha_time).now().is_valid();
 
         it.printf(400, 100, id(font_48), COLOR_BLUE, TextAlign::TOP_CENTER, "DÉMARRAGE DU SYSTÈME");
-        it.printf(400, 200, id(font_32), COLOR_BLACK, TextAlign::TOP_CENTER, "Initialisation des liaisons...");
+        it.printf(400, 200, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Initialisation des liaisons...");
 
         it.printf(400, 280, id(font_24), api_ok ? COLOR_GREEN : COLOR_DARK_GRAY, TextAlign::TOP_CENTER, 
                   api_ok ? "[OK] Home Assistant connecté" : "[..] Connexion à Home Assistant...");
@@ -307,17 +307,17 @@ display:
       // -------------------------------------------------------
       if (current_p == 0) {
         it.printf(400, 140, id(font_48), COLOR_BLUE, TextAlign::TOP_CENTER, "Hello World - Page 1");
-        it.printf(400, 240, id(font_32), COLOR_BLACK, TextAlign::TOP_CENTER, "Version Home Assistant :");
+        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version Home Assistant :");
         it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", ha_ver.c_str());
       }
       else if (current_p == 1) {
         it.printf(400, 140, id(font_48), COLOR_GREEN, TextAlign::TOP_CENTER, "Hello World - Page 2");
-        it.printf(400, 240, id(font_32), COLOR_BLACK, TextAlign::TOP_CENTER, "Version Home Assistant :");
+        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version Home Assistant :");
         it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", ha_ver.c_str());
       }
       else if (current_p == 2) {
-        it.printf(400, 140, id(font_48), COLOR_BLACK, TextAlign::TOP_CENTER, "Hello World - Page 3");
-        it.printf(400, 240, id(font_32), COLOR_BLACK, TextAlign::TOP_CENTER, "Version Home Assistant :");
+        it.printf(400, 140, id(font_48), COLOR_RED, TextAlign::TOP_CENTER, "Hello World - Page 3");
+        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version Home Assistant :");
         it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", ha_ver.c_str());
       }
 
@@ -330,15 +330,15 @@ display:
 
       // Bouton Onglet 0
       it.filled_rectangle(0, 421, 266, 59, current_p == 0 ? COLOR_BLUE : COLOR_WHITE);
-      it.printf(133, 450, id(font_32), current_p == 0 ? COLOR_WHITE : COLOR_BLACK, TextAlign::CENTER, "Page 1");
+      it.printf(133, 450, id(font_32), current_p == 0 ? COLOR_WHITE : COLOR_RED, TextAlign::CENTER, "Page 1");
 
       // Bouton Onglet 1
       it.filled_rectangle(267, 421, 266, 59, current_p == 1 ? COLOR_BLUE : COLOR_WHITE);
-      it.printf(400, 450, id(font_32), current_p == 1 ? COLOR_WHITE : COLOR_BLACK, TextAlign::CENTER, "Page 2");
+      it.printf(400, 450, id(font_32), current_p == 1 ? COLOR_WHITE : COLOR_RED, TextAlign::CENTER, "Page 2");
 
       // Bouton Onglet 2
       it.filled_rectangle(534, 421, 266, 59, current_p == 2 ? COLOR_BLUE : COLOR_WHITE);
-      it.printf(666, 450, id(font_32), current_p == 2 ? COLOR_WHITE : COLOR_BLACK, TextAlign::CENTER, "Page 3");
+      it.printf(666, 450, id(font_32), current_p == 2 ? COLOR_WHITE : COLOR_RED, TextAlign::CENTER, "Page 3");
 
 # ---------------------------------------------------------
 # RÉTROÉCLAIRAGE
