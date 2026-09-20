@@ -280,7 +280,7 @@ display:
       int current_p = id(display_page);
 
       // Titre supérieur
-      it.printf(20, 15, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_LEFT, "Sunton ESP32-S3 7.0\"");
+      it.printf(20, 15, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_LEFT, "Sunton ESP32-S3 7.0\"" By Socrate Mobile);
 
       // Signal WiFi (en haut à droite)
       float rssi = id(wifi_rssi).state;
