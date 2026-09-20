@@ -6,7 +6,7 @@ Cette base résout les instabilités courantes rencontrées sur ce modèle :
 - **Suppression des scintillements et du tearing** (effet de balayage de haut en bas) grâce au pilote `mipi_rgb` cadencé à 16 MHz et au rafraîchissement contrôlé (`auto_clear_enabled: true`).
 - **Tactile GT911 stable** : fonctionnement en polling I2C direct sans conflit d'interruption ni de broche de reset bloquante.
 - **Résolution des conflits matériels ESP32-S3** : désactivation de la console USB-Serial-JTAG qui entre en conflit avec les broches I2C (GPIO 19 et 20).
-- **Navigation multi-onglets** réactive (Page 1, Page 2, Page 3) avec affichage dynamique de la version de Home Assistant.
+- **Navigation multi-onglets réactive** (Page 1, Page 2, Page 3) avec affichage dynamique de la version et de l'horloge réseau de Home Assistant.
 
 ---
 
@@ -39,20 +39,20 @@ Cette base résout les instabilités courantes rencontrées sur ce modèle :
 ### Contrôleur tactile (GT911)
 * **SDA :** `GPIO 19`
 * **SCL :** `GPIO 20`
-* **Adresse I2C :** `0x5D` (mode polling, broches INT et RST matérielles gérées hors ESPHome pour éviter tout gel du bus)
+* **Adresse I2C :** `0x5D` (mode polling, broches INT et RST matérielles gérées hors ESPHome pour éviter tout blocage du bus)
 
 ---
 
 ## 📦 Code ESPHome complet (`sunton-7inch-starter.yaml`)
 
-Ce modèle affiche une page de démarrage synchronisée, puis bascule sur une interface à 3 onglets ("Page 1", "Page 2", "Page 3") affichant le texte « Hello World » et la version de votre serveur Home Assistant.
+Ce modèle affiche une page de garde synchronisée, puis bascule sur une interface à 3 onglets ("Page 1", "Page 2", "Page 3") avec le titre « Sunton ESP32-S3 7.0" By SocrateMobile », les textes en rouge et l'affichage temps réel de la version et de l'heure de Home Assistant.
 
 ```yaml
 substitutions:
   devicename: "ecran-sunton-7"
   friendly_name: "Écran Sunton 7 Pouces"
   project_name: "Sunton.ESP32-S3-8048S070"
-  project_version: "2.0"
+  project_version: "2.2"
 
 esphome:
   name: ${devicename}
@@ -123,6 +123,7 @@ globals:
 # HORLOGE DE RAFRAÎCHISSEMENT
 # ---------------------------------------------------------
 interval:
+  # Vérification de connexion rapide au démarrage (500 ms)
   - interval: 500ms
     then:
       - lambda: |-
@@ -136,7 +137,8 @@ interval:
             }
             id(my_display).update();
           }
-  - interval: 15s
+  # Rafraîchissement régulier toutes les secondes pour l'horloge
+  - interval: 1s
     then:
       - lambda: |-
           if (id(boot_done)) {
@@ -172,7 +174,7 @@ touchscreen:
         int x = touch.x;
         int y = touch.y;
         
-        // Détection de la barre de navigation inférieure (y >= 420)
+        // Détection sur la barre de navigation inférieure (y >= 420)
         if (y >= 420) {
           int next_page = id(display_page);
           if (x < 266) next_page = 0;
@@ -252,13 +254,13 @@ display:
       blue: [15, 7, 6, 5, 4]
     lambda: |-
       const auto COLOR_WHITE      = Color(255, 255, 255);
-      const auto COLOR_RED      = Color(255, 0, 0);
+      const auto COLOR_RED        = Color(220, 53, 69);
       const auto COLOR_BLUE       = Color(0, 120, 230);
       const auto COLOR_GREEN      = Color(40, 167, 69);
       const auto COLOR_DARK_GRAY  = Color(120, 120, 120);
 
       // -------------------------------------------------------
-      // ÉCRAN DE BOOT (ATTENTE CONNEXION)
+      // ÉCRAN DE GARDE (ATTENTE INITIALE)
       // -------------------------------------------------------
       if (!id(boot_done)) {
         bool api_ok  = api_is_connected();
@@ -279,8 +281,8 @@ display:
       // -------------------------------------------------------
       int current_p = id(display_page);
 
-      // Titre supérieur
-      it.printf(20, 15, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_LEFT, "Sunton ESP32-S3 7.0\"" By Socrate Mobile);
+      // Titre supérieur avec signature
+      it.printf(20, 15, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_LEFT, "Sunton ESP32-S3 7.0\" By SocrateMobile");
 
       // Signal WiFi (en haut à droite)
       float rssi = id(wifi_rssi).state;
@@ -296,29 +298,38 @@ display:
         else it.rectangle(bx, by, 5, bar_h, COLOR_DARK_GRAY);
       }
 
-      // Récupération de la version de Home Assistant
+      // Construction de la chaîne : Version HA - Heure HA
       std::string ha_ver = id(text_sensor_ha_version).state;
       if (ha_ver.empty() || ha_ver == "unavailable" || ha_ver == "unknown") {
-        ha_ver = "Connexion en cours...";
+        ha_ver = "--";
       }
+
+      char time_str[32] = "--:--:--";
+      auto now = id(ha_time).now();
+      if (now.is_valid()) {
+        now.strftime(time_str, sizeof(time_str), "%H:%M:%S");
+      }
+
+      char status_line[128];
+      snprintf(status_line, sizeof(status_line), "%s - %s", ha_ver.c_str(), time_str);
 
       // -------------------------------------------------------
       // CONTENU DES PAGES
       // -------------------------------------------------------
       if (current_p == 0) {
         it.printf(400, 140, id(font_48), COLOR_BLUE, TextAlign::TOP_CENTER, "Hello World - Page 1");
-        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version Home Assistant :");
-        it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", ha_ver.c_str());
+        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version & Heure Home Assistant :");
+        it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", status_line);
       }
       else if (current_p == 1) {
         it.printf(400, 140, id(font_48), COLOR_GREEN, TextAlign::TOP_CENTER, "Hello World - Page 2");
-        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version Home Assistant :");
-        it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", ha_ver.c_str());
+        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version & Heure Home Assistant :");
+        it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", status_line);
       }
       else if (current_p == 2) {
         it.printf(400, 140, id(font_48), COLOR_RED, TextAlign::TOP_CENTER, "Hello World - Page 3");
-        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version Home Assistant :");
-        it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", ha_ver.c_str());
+        it.printf(400, 240, id(font_32), COLOR_RED, TextAlign::TOP_CENTER, "Version & Heure Home Assistant :");
+        it.printf(400, 290, id(font_32), COLOR_DARK_GRAY, TextAlign::TOP_CENTER, "%s", status_line);
       }
 
       // -------------------------------------------------------
